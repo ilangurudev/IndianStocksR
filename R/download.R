@@ -110,11 +110,17 @@ download_stocks <- function(date = lubridate::today(),
       download.file(url = url, destfile = dest_file, quiet = TRUE) %>% suppressWarnings()
     },
     error = function(e){
-      file.remove(dest_file)
+      if(file.exists(dest_file)){
+        unlink(dest_file)
+        file.remove(dest_file)
+      }
       stop(download_error_message(date, exchange))
     },
     warning = function(w){
-      file.remove(dest_file)
+      if(file.exists(dest_file)){
+        unlink(dest_file)
+        file.remove(dest_file)
+      }
       stop(download_error_message(date, exchange))
     }
   )
