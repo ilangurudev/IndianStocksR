@@ -1,25 +1,26 @@
-check_market <- function(market = c("nse", "bse"), include_both = TRUE){
-  if(!include_both){
-    if(length(market) >= 2){
-      if(all(market %in% c("nse", "bse"))){
-        message("Downloading from NSE. Market option not specified.")
-        "nse"
-      } else {
-        stop("The specified option for market is not valid.")
-      }
-    } else if(!market %in% c("nse", "bse")){
-      stop("The specified option for market is not valid.")
-    } else {
-      "nse"
-    }
-  } else {
+check_exchange <- function(exchange = c("nse", "bse"), include_both = TRUE){
 
-  }
+    if(include_both){
+      exchanges <- c("both", "nse", "bse")
+    } else{
+      exchanges <- c("nse", "bse")
+    }
+
+    if(all(exchange %in% exchanges)){
+      if(length(exchange) > 1){
+        exchange <- ifelse(include_both, "both", "nse")
+        message("Downloading from '", exchange, "' as exchange not clearly specified.")
+      }
+      return(exchange[1])
+    } else {
+      stop("At least one of the specified options for exchange are not valid.")
+    }
+
 }
 
 
-make_date_url <- function(date, market = c("nse", "bse")){
-  if(market == "nse"){
+make_date_url <- function(date, exchange = c("nse", "bse")){
+  if(exchange == "nse"){
     download_name <- paste0("cm", toupper(as.character(date, "%d%b%Y")), "bhav.csv")
 
     paste0("https://www.nseindia.com/content/historical/EQUITIES/",
@@ -33,14 +34,14 @@ make_date_url <- function(date, market = c("nse", "bse")){
   }
 }
 
-download_stocks_nse_bse <- function(date = lubridate::today(), ...){
+download_stocks_both <- function(date = lubridate::today(), ...){
 
-  download_stocks(date = date, market = "nse", ...)
-  download_stocks(date = date, market = "bse", ...)
+  download_stocks(date = date, exchange = "nse", ...)
+  download_stocks(date = date, exchange = "bse", ...)
 }
 
 date_validation <- function(date){
-  date <- lubridate::as_date(date) %>% suppressWarnings() %>% suppressMessages()
+  date <- lubridate::as_date(date) #%>% suppressWarnings() %>% suppressMessages()
 
   if((!lubridate::is.Date(date)) | is.na(date)){
     e <- simpleError("Date failed to parse")
@@ -56,10 +57,11 @@ date_filename_pattern <- function(date){
   lubridate::mday(date) %>% stringr::str_pad(width = 2, side = "left", pad = "0"))
 }
 
-download_stocks <- function(date = lubridate::today(), market = c("nse", "bse"), dest_path = "./data"){
+download_stocks <- function(date = lubridate::today(), exchange = c("nse", "bse"), dest_path = "./data"){
 
   date <- try(date_validation(date))
-  market <- check_market(market, include_both = FALSE)
+
+  exchange <- check_exchange(exchange, include_both = FALSE)
 
   if(dest_path != "./data" & !dir.exists(dest_path)){
     stop("The path you specified does not exist.")
@@ -70,11 +72,11 @@ download_stocks <- function(date = lubridate::today(), market = c("nse", "bse"),
   }
 
 
-  file_name <- paste0(market, "_", date_filename_pattern(date))
+  file_name <- paste0(exchange, "_", date_filename_pattern(date))
 
   file_name <- paste0(file_name, ".zip")
   dest_file <- paste0(dest_path, "/", file_name)
-  url <- make_date_url(date = date, market = market)
+  url <- make_date_url(date = date, exchange = exchange)
 
   tryCatch(
     {
@@ -84,60 +86,63 @@ download_stocks <- function(date = lubridate::today(), market = c("nse", "bse"),
       file.remove(dest_file)
       stop(paste0("No download data available for ",
                      date %>% as.character("%d %b %Y"),
-                     ". Either the data is not available yet or the market did not function on that day."))
+                     ". Either the data is not available yet or the exchange did not function on that day."))
     },
     warning = function(w){
       file.remove(dest_file)
       stop(paste0("No download data available for ",
                      date %>% as.character("%d %b %Y"),
-                     ". Either the data is not available yet or the market did not function on that day."))
+                     ". Either the data is not available yet or the exchange did not function on that day."))
     }
   )
 
   df_download <- suppressWarnings(suppressMessages(readr::read_csv(dest_file)))
-  if(market == "nse") df_download$X14 <- NULL
+  if(exchange == "nse") df_download$X14 <- NULL
+  df_download$date <- date
   readr::write_csv(df_download, dest_file %>% stringr::str_replace("zip", "csv"))
   file.remove(dest_file)
 
-  message(paste0("Dowloaded stocks data from ", toupper(market), " on ", toupper(as.character(date, "%d %b %Y"))))
+  message(paste0("Dowloaded stocks data from ", toupper(exchange), " on ", toupper(as.character(date, "%d %b %Y"))))
 }
 
 download_stocks_period <- function(start = lubridate::today() - 8,
                                    end = lubridate::today(),
-                                   market = c("both", "nse", "bse"),
+                                   exchange = c("both", "nse", "bse"),
                                    dest_path = "./data",
                                    compile = TRUE,
                                    delete_component_files = TRUE){
 
   start <- date_validation(start)
   end <- date_validation(end)
-
   stopifnot(start < end)
 
-  if(market == "both"){
+  exchange <- check_exchange(exchange)
+
+
+  if(exchange == "both"){
     purrr::walk(start:end, function(x){
-      tryCatch(download_stocks_nse_bse(date = x, dest_path),
+      tryCatch(download_stocks_both(date = x, dest_path),
                error = function(e){
                  message(paste0("No download data available for ",
                                 lubridate::as_date(x) %>% as.character("%d %b %Y"),
-                                ". Either the data is not available yet or the market did not function on that day."))
+                                ". Either the data is not available yet or the exchange did not function on that day."))
                  NULL
                })
     })
   } else {
     purrr::walk(start:end, function(x){
-      tryCatch(download_stocks(date = x, market = market, dest_path),
+      tryCatch(download_stocks(date = x, exchange = exchange, dest_path),
                error = function(e){
                  message(paste0("No download data available for ",
                                 lubridate::as_date(x) %>% as.character("%d %b %Y"),
-                                ". Either the data is not available yet or the market did not function on that day."))
+                                ". Either the data is not available yet or the exchange did not function on that day."))
                  NULL
                })
     })
   }
 
   if(compile){
-    compile_market_data(data_path = dest_path, market = market, delete_component_files)
+    compile_exchange_data(data_path = dest_path, exchange = exchange, delete_component_files)
   }
 
   message("Stock data downloaded for date range")
@@ -145,54 +150,81 @@ download_stocks_period <- function(start = lubridate::today() - 8,
 }
 
 
-extract_date <- function(x) stringr::str_extract(x, "[\\d]+_[\\d]+_[\\d]+") %>% lubridate::ymd()
+extract_date <- function(x){
+  if(length(x) == 0) return(NA)
+  stringr::str_extract(x, "[\\d]+_[\\d]+_[\\d]+") %>% lubridate::ymd()
+}
 
 
-compile_market_data <- function(data_path = "./data",
-                                market = c("both", "nse", "bse"),
+compile_exchange_data <- function(data_path = "./data",
+                                exchange = c("both", "nse", "bse"),
                                 delete_component_files =  TRUE){
 
-  stopifnot(any(market %in% c("nse", "bse", "both")))
+  exchange <- check_exchange(exchange)
 
-  if(length(market) > 1){
-    market = "both"
-  }
+  if(exchange == "both"){
 
-  if(market == "both"){
+    df_bse <- compile_exchange_data(data_path = data_path, exchange = "bse")
+    df_bse$exchange <- "bse"
 
-    df_bse <- compile_market_data(data_path = data_path, market = "bse")
-    df_bse$market <- "bse"
+    df_nse <- compile_exchange_data(data_path = data_path, exchange = "nse")
+    df_nse$exchange <- "nse"
 
-    df_nse <- compile_market_data(data_path = data_path, market = "bse")
-    df_bse$market <- "nse"
+    df_bse <-
+      df_bse %>%
+      dplyr::rename(
+             symbol = SC_NAME,
+             isin = SC_CODE,
+             series = SC_TYPE,
+             tottrdqty = NO_OF_SHRS) %>%
+      dplyr::mutate(series = ifelse(series == "Q", "EQ", series))
 
-    rbind(df_bse, df_nse)
+    colnames(df_nse) <- tolower(colnames(df_nse))
+    colnames(df_bse) <- tolower(colnames(df_bse))
+
+    df_bse <-
+      df_bse %>%
+      dplyr::rename(volume = tottrdqty) %>%
+      dplyr::select(exchange, date, symbol, isin, open, high, low, close, volume, dplyr::everything()) %>%
+      dplyr::mutate(isin = isin %>% as.character())
+
+
+    df_nse <-
+      df_nse %>%
+      dplyr::rename(volume = tottrdqty) %>%
+      dplyr::select(exchange, date, symbol, isin, open, high, low, close, volume, dplyr::everything()) %>%
+      dplyr::mutate(isin = isin %>% as.character())
+
+    df_all <-
+      dplyr::bind_rows(df_nse, df_bse)
+    date_file_name <- dir(data_path) %>% extract_date() %>% min() %>% date_filename_pattern()
+    df_all %>% readr::write_csv(paste0(data_path, "/", "all_compiled_", date_file_name, ".csv"))
+
+    df_all
 
   } else {
 
     message(paste("Compiling all and only the available files in the specified directory.",
                   "If the available files contain gaps, then the compiled file will too."))
 
-    files <- paste0(data_path, "/", dir(data_path, pattern = market))
+    files <- paste0(data_path, "/", dir(data_path, pattern = exchange))
 
-    df_market_compiled <- purrr::map_dfr(files, function(x){
+    df_exchange_compiled <- purrr::map_dfr(files, function(x){
 
-      date <- extract_date(x)
       df_x <- readr::read_csv(x) %>% suppressMessages() %>% suppressWarnings()
-      df_x$date <- date
       df_x
     }) %>%
     dplyr::distinct()
 
-    max_date <- dir("./data", pattern = market) %>% extract_date() %>% max()
+    max_date <- dir("./data", pattern = exchange) %>% extract_date() %>% max()
 
     if(delete_component_files){
       file.remove(files)
     }
 
-    readr::write_csv(df_market_compiled, paste0(data_path, "/", market, "_compiled_", date_filename_pattern(max_date), ".csv"))
+    readr::write_csv(df_exchange_compiled, paste0(data_path, "/", exchange, "_compiled_", date_filename_pattern(max_date), ".csv"))
 
-    df_market_compiled
+    df_exchange_compiled
   }
 
 }
@@ -200,32 +232,42 @@ compile_market_data <- function(data_path = "./data",
 
 update_stocks <- function(data_path = "./data",
                           till = lubridate::today(),
-                          market = c("both", "nse", "bse"),
+                          exchange = c("both", "nse", "bse"),
                           compile = TRUE,
                           delete_component_files = TRUE){
 
-  # browser()
-  if(market == "both"){
+  exchange <- check_exchange(exchange)
+
+  if(exchange == "both"){
     update_stocks(data_path = data_path,
                   till = till,
-                  market = "nse",
+                  exchange = "nse",
                   compile = compile,
                   delete_component_files = delete_component_files)
 
     update_stocks(data_path = data_path,
                   till = till,
-                  market = "bse",
+                  exchange = "bse",
                   compile = compile,
                   delete_component_files = delete_component_files)
+
+    compile_exchange_data(exchange = "both", data_path = data_path, delete_component_files = FALSE)
 
   } else {
+    # browser()
 
     files <- dir(path = data_path,
-                 pattern = market)
-    max_date <- files %>% extract_date() %>% max()
+                 pattern = exchange)
+
+    max_date <- max(extract_date(files))
+
+    if(is.na(max_date)){
+      max_date <- lubridate::today() - 8
+    }
+
     download_stocks_period(start = max_date + 1,
                            end = till,
-                           market = market,
+                           exchange = exchange,
                            dest_path = data_path,
                            compile = compile,
                            delete_component_files = delete_component_files)
@@ -235,7 +277,7 @@ update_stocks <- function(data_path = "./data",
 }
 
 
-`%>%` <- function(...){
-  purrr::`%>%`(...)
-}
+# `%>%` <- function(...){
+#   purrr::`%>%`(...)
+# }
 
