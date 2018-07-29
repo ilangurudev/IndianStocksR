@@ -131,7 +131,7 @@ extract_date <- function(x){
 safely_remove <- function(file){
   if(file.exists(file)){
     if(stringr::str_detect(file, ".zip")){
-      unlink(file)
+      unlink(file, recursive = TRUE)
     } else {
       file.remove(file)
     }
