@@ -1,14 +1,24 @@
-#' Title
+#' Generate url to download
 #'
-#' @param date
-#' @param exchange
+#' @title This function generates the url depending on the exchange and the date.
 #'
-#' @return
-#' @export
+#' @param date The date you want the data for.
+#' The input should either be a date object or a something that lubridate::as_date can parse to be a
+#' date. If a string is in the format yyyy-mm-dd, this generally works.
+#' @param exchange Choose either "bse" or "nse". If nothing is provided, defaults to "nse".
+#'
+#' @return The url that should have the data for the exchange and the date specified.
 #'
 #' @examples
+#' make_date_url("2018-07-25", exchange = "bse")
+#'
+#' make_date_url(lubridate::today())
 
 make_date_url <- function(date, exchange = c("nse", "bse")){
+
+  exchange <- check_exchange(exchange, include_both = FALSE)
+  date <- try(date_validation(date))
+
   if(exchange == "nse"){
     download_name <- paste0("cm", toupper(as.character(date, "%d%b%Y")), "bhav.csv")
 
@@ -24,34 +34,57 @@ make_date_url <- function(date, exchange = c("nse", "bse")){
 }
 
 
-#' Title
+#' Download stock data
 #'
-#' @param date
-#' @param exchange
+#' Used to download stocks from both exchanges on the date specified.
 #'
-#' @return
+#' @param date The date you want the data for.
+#' The input should either be a date object or a something that lubridate::as_date can parse to be a
+#' date. If a string is in the format yyyy-mm-dd, this generally works. Defaults to lubridate::today()
+#' @param ... Arguments you would pass to the download stocks function
+#'
+#' @return The function does not return anything.
+#' It just gets the files downloaded if data is available.
+#'
 #' @export
 #'
 #' @examples
+#' download_stocks_both()
+#'
+#' download_stocks_both(date = "2018-07-16", dest_path = ".")
 
 download_stocks_both <- function(date = lubridate::today(), ...){
-
   download_stocks(date = date, exchange = "nse", ...)
   download_stocks(date = date, exchange = "bse", ...)
 }
 
 
-#' Title
+#' Download stock data
 #'
-#' @param date
-#' @param exchange
+#' Downloads stock data from the specified exchanges on the specified date.
 #'
-#' @return
+#' @param date  The date you want the data for.
+#' The input should either be a date object or a something that lubridate::as_date can parse to be a
+#' date. If a string is in the format yyyy-mm-dd, this generally works. Defaults to lubridate::today()
+#' @param exchange Either "nse" or "bse". Defaults to "nse".
+#' @param dest_path The location where you want to download the files to.
+#' Defaults to the data folder in the current working directory.
+#' If there is no data folder, one will be created.
+#' @param quiet If TRUE, there will be no messages on the download status.
+#'
+#' @return he function does not return anything.
+#' It just gets the files downloaded if data is available.
 #' @export
 #'
 #' @examples
+#' download_stocks()
+#'
+#' download_stocks(date = lubridate::today() - 3, exchange = "bse")
 
-download_stocks <- function(date = lubridate::today(), exchange = c("nse", "bse"), dest_path = "./data"){
+download_stocks <- function(date = lubridate::today(),
+                            exchange = c("nse", "bse"),
+                            dest_path = "./data",
+                            quiet = FALSE){
 
   date <- try(date_validation(date))
 
@@ -78,15 +111,11 @@ download_stocks <- function(date = lubridate::today(), exchange = c("nse", "bse"
     },
     error = function(e){
       file.remove(dest_file)
-      stop(paste0("No download data available for ",
-                     date %>% as.character("%d %b %Y"),
-                     ". Either the data is not available yet or the exchange did not function on that day."))
+      stop(download_error_message(date))
     },
     warning = function(w){
       file.remove(dest_file)
-      stop(paste0("No download data available for ",
-                     date %>% as.character("%d %b %Y"),
-                     ". Either the data is not available yet or the exchange did not function on that day."))
+      stop(download_error_message(date))
     }
   )
 
@@ -95,27 +124,48 @@ download_stocks <- function(date = lubridate::today(), exchange = c("nse", "bse"
   df_download$date <- date
   readr::write_csv(df_download, dest_file %>% stringr::str_replace("zip", "csv"))
   file.remove(dest_file)
+  if(!quiet){
+    message(paste0("Dowloaded stocks data from ", toupper(exchange), " on ", toupper(as.character(date, "%d %b %Y"))))
+  }
 
-  message(paste0("Dowloaded stocks data from ", toupper(exchange), " on ", toupper(as.character(date, "%d %b %Y"))))
 }
 
 
-#' Title
+#' Download stock data
 #'
-#' @param date
-#' @param exchange
+#' Downloads stock data for the period specified
 #'
-#' @return
+#' @param start The date from which you want the data.
+#' Defaults to lubridate::today() - 8 (8 days before today).
+#' @param end The date till which you want the data. Defauts to lubridate::today().
+#' @param exchange Choose one from "both", "nse" or "bse". Defaults to "both".
+#' @param dest_path The path you want the downloaded files to go in.
+#' Defaults to the data folder in the current working directory.
+#' @param compile If FALSE, the individual downloaded files are retained and
+#' not compiled into one large file. If TRUE, the files are compiled into one large file.
+#' You can choose whether to retain just the compiled file or not, using the delete_component_files parameter.
+#' If there are other nse or bse files, even they are compiled into one and
+#' Defaults to TRUE.
+#' @param delete_component_files Works only if compile is TRUE. If TRUE, only the compiled file will be retained.
+#' If FALSE, all the individual component files will be retained.
+#' @param quiet Controls the download status message.
+#' If you do not want the download status on each day, TRUE should be specified. Defaults to FALSE.
+#'
+#' @return If compile is TRUE, the compiled dataframe is returned.
+#' If FALSE, the files are just downloaded and nothing is returned.
 #' @export
 #'
 #' @examples
-
+#' download_stocks_period()
+#'
+#' download_stocks_period(start = "2017-01-01", end = "2017-01-05", exchange = "bse", compile = FALSE)
 download_stocks_period <- function(start = lubridate::today() - 8,
                                    end = lubridate::today(),
                                    exchange = c("both", "nse", "bse"),
                                    dest_path = "./data",
                                    compile = TRUE,
-                                   delete_component_files = TRUE){
+                                   delete_component_files = TRUE,
+                                   quiet = FALSE){
 
   start <- date_validation(start)
   end <- date_validation(end)
@@ -126,21 +176,17 @@ download_stocks_period <- function(start = lubridate::today() - 8,
 
   if(exchange == "both"){
     purrr::walk(start:end, function(x){
-      tryCatch(download_stocks_both(date = x, dest_path),
+      tryCatch(download_stocks_both(date = x, dest_path, quiet = quiet),
                error = function(e){
-                 message(paste0("No download data available for ",
-                                lubridate::as_date(x) %>% as.character("%d %b %Y"),
-                                ". Either the data is not available yet or the exchange did not function on that day."))
+                 message(download_error_message(x, "at least one of the exchanges"))
                  NULL
                })
     })
   } else {
     purrr::walk(start:end, function(x){
-      tryCatch(download_stocks(date = x, exchange = exchange, dest_path),
+      tryCatch(download_stocks(date = x, exchange = exchange, dest_path, quiet = quiet),
                error = function(e){
-                 message(paste0("No download data available for ",
-                                lubridate::as_date(x) %>% as.character("%d %b %Y"),
-                                ". Either the data is not available yet or the exchange did not function on that day."))
+                 message(download_error_message(x, exchange))
                  NULL
                })
     })
@@ -155,21 +201,32 @@ download_stocks_period <- function(start = lubridate::today() - 8,
 }
 
 
-#' Title
+
+#' Compile the exchange files inside a directory
 #'
-#' @param date
-#' @param exchange
+#' This is used to compile all the individual files for different dates into compiled files.
 #'
-#' @return
+#' @param data_path The path that contains the data files you want to compile. Deafults to the data folder in the current working directory.
+#' @param exchange Specifies the exchange files you want to compile. One of "both", "nse" or "bse".
+#' If both is specified, the nse component files are compiled into nse_compiled_latest_date.csv and
+#' bse files are compiled into  bse_compiled_latest_date.csv.
+#' Both the nse and bse compiled files are parsed and combined into both_compiled_latest_date.
+#' Dedaults to "both".
+#' @param delete_component_files Deletes all the individual files and retains only the compiled files.
+#'
+#' @return Returns the compiled dataframe and also has the returned dataframe written out as a csv in the folder it compiles.
 #' @export
 #'
 #' @examples
+#' compile_exchange_data(data_path = "./data", exchange = "both")
+#'
 
 compile_exchange_data <- function(data_path = "./data",
                                 exchange = c("both", "nse", "bse"),
                                 delete_component_files =  TRUE){
 
   exchange <- check_exchange(exchange)
+  stopifnot(dir.exists(data_path))
 
   if(exchange == "both"){
 
@@ -207,20 +264,25 @@ compile_exchange_data <- function(data_path = "./data",
     df_all <-
       dplyr::bind_rows(df_nse, df_bse)
     date_file_name <- dir(data_path) %>% extract_date() %>% min() %>% date_filename_pattern()
-    df_all %>% readr::write_csv(paste0(data_path, "/", "all_compiled_", date_file_name, ".csv"))
+    df_all %>% readr::write_csv(paste0(data_path, "/", "both_compiled_", date_file_name, ".csv"))
 
     df_all
 
   } else {
 
-    message(paste("Compiling all and only the available files in the specified directory.",
-                  "If the available files contain gaps, then the compiled file will too."))
+    files <- dir(data_path, pattern = exchange)
+    if(length(files) < 1){
+      stop(paste("No files of", exchange, "to compile."))
+    }
+    files <- paste0(data_path, "/", files)
 
-    files <- paste0(data_path, "/", dir(data_path, pattern = exchange))
+    message(paste("Compiling all and only the available files in the specified directory.",
+                  "If the available files contain gaps, then the compiled file will too.",
+                  "If it contains other exchange files, they will get added to the compiled too."))
 
     df_exchange_compiled <- purrr::map_dfr(files, function(x){
 
-      df_x <- readr::read_csv(x) %>% suppressMessages() %>% suppressWarnings()
+      df_x <-  suppressWarnings((suppressMessages(readr::read_csv(x))))
       df_x
     }) %>%
     dplyr::distinct()
@@ -239,16 +301,32 @@ compile_exchange_data <- function(data_path = "./data",
 }
 
 
-#' Title
+
+#' Download stock data
 #'
-#' @param date
-#' @param exchange
+#' Used to periodically update the compiled data.
+#' Downloads data from the point till when the data is present (if nothing is present, the last 8 days) till the point we specify.
 #'
-#' @return
+#' @param data_path The path you want to update, which possibly contains the data files.
+#' Defaults to the data folder in the current working directory.
+#' @param till The date till which you want to update. Defaults to lubridate::today()
+#' @param exchange One of "both", "nse" or "bse". Defaults to "both".
+#' @param compile If FALSE, the individual downloaded files are retained and
+#' not compiled into one large file. If TRUE, the files are compiled into one large file.
+#' You can choose whether to retain just the compiled file or not, using the delete_component_files parameter.
+#' If there are other nse or bse files, even they are compiled into one and
+#' Defaults to TRUE.
+#' @param delete_component_files Works only if compile is TRUE. If TRUE, only the compiled file will be retained.
+#' If FALSE, all the individual component files will be retained.
+#'
+#' @return If exchange is "both", then the compiled data from both "nse" and "bse" is returned or
+#' the compiled data from whatever exchange is specified. The new files are also written as csvs in the path specified.
 #' @export
 #'
 #' @examples
-
+#' update_stocks()
+#'
+#' update_stocks(till = "2018-07-25")
 update_stocks <- function(data_path = "./data",
                           till = lubridate::today(),
                           exchange = c("both", "nse", "bse"),
@@ -256,6 +334,7 @@ update_stocks <- function(data_path = "./data",
                           delete_component_files = TRUE){
 
   exchange <- check_exchange(exchange)
+  stopifnot(dir.exists(data_path))
 
   if(exchange == "both"){
     update_stocks(data_path = data_path,
