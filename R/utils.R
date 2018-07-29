@@ -116,3 +116,24 @@ extract_date <- function(x){
   if(length(x) == 0) return(NA)
   stringr::str_extract(x, "[\\d]+_[\\d]+_[\\d]+") %>% lubridate::ymd()
 }
+
+
+#' Helper functions
+#'
+#' Remove a file safely
+#'
+#' @param file The file with the location
+#'
+#' @return Deletes the file and returns nothing
+#'
+#' @examples
+#' safely_remove("./data/file.csv")
+safely_remove <- function(file){
+  if(file.exists(file)){
+    if(stringr::str_detect(file, ".zip")){
+      unlink(file)
+    } else {
+      file.remove(file)
+    }
+  }
+}

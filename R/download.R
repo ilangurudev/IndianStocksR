@@ -110,17 +110,11 @@ download_stocks <- function(date = lubridate::today(),
       download.file(url = url, destfile = dest_file, quiet = TRUE) %>% suppressWarnings()
     },
     error = function(e){
-      if(file.exists(dest_file)){
-        unlink(dest_file)
-        file.remove(dest_file)
-      }
+      safely_remove(dest_file)
       stop(download_error_message(date, exchange))
     },
     warning = function(w){
-      if(file.exists(dest_file)){
-        unlink(dest_file)
-        file.remove(dest_file)
-      }
+      safely_remove(dest_file)
       stop(download_error_message(date, exchange))
     }
   )
@@ -129,11 +123,12 @@ download_stocks <- function(date = lubridate::today(),
   if(exchange == "nse") df_download$X14 <- NULL
   df_download$date <- date
   readr::write_csv(df_download, dest_file %>% stringr::str_replace("zip", "csv"))
-  if(file.exists(dest_file)){
-    unlink(dest_file)
-    file.remove(dest_file)
-  }
-  file.remove(dest_file)
+  # if(file.exists(dest_file)){
+  #   unlink(dest_file)
+  #   file.remove(dest_file)
+  # }
+  safely_remove(dest_file)
+
   if(!quiet){
     message(paste0("Dowloaded stocks data from ", toupper(exchange), " on ", toupper(as.character(date, "%d %b %Y"))))
   }
@@ -203,7 +198,7 @@ download_stocks_period <- function(start = lubridate::today() - 8,
   }
 
   message("Stock data downloaded for date range")
-
+  # browser()
   if(compile){
     compile_exchange_data(data_path = dest_path, exchange = exchange, delete_component_files)
   }
@@ -271,6 +266,8 @@ compile_exchange_data <- function(data_path = "./data",
       dplyr::select(exchange, date, symbol, isin, open, high, low, close, volume, dplyr::everything()) %>%
       dplyr::mutate(isin = isin %>% as.character())
 
+    message(paste("Compiling", toupper("BSE and NSE together")))
+
     df_all <-
       dplyr::bind_rows(df_nse, df_bse)
     date_file_name <- dir(data_path) %>% extract_date() %>% min() %>% date_filename_pattern()
@@ -279,6 +276,8 @@ compile_exchange_data <- function(data_path = "./data",
     df_all
 
   } else {
+
+    message(paste("Compiling", toupper(exchange)))
 
     files <- dir(data_path, pattern = exchange) %>% stringr::str_subset(".csv")
     if(length(files) < 1){
@@ -300,7 +299,8 @@ compile_exchange_data <- function(data_path = "./data",
     max_date <- dir("./data", pattern = exchange) %>% extract_date() %>% max()
 
     if(delete_component_files){
-      file.remove(files)
+      files %>% purrr::walk(safely_remove)
+      # file.remove(files)
     }
 
     readr::write_csv(df_exchange_compiled, paste0(data_path, "/", exchange, "_compiled_", date_filename_pattern(max_date), ".csv"))
