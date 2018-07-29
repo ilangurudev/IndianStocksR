@@ -141,11 +141,11 @@ download_stocks_period <- function(start = lubridate::today() - 8,
     })
   }
 
+  message("Stock data downloaded for date range")
+
   if(compile){
     compile_exchange_data(data_path = dest_path, exchange = exchange, delete_component_files)
   }
-
-  message("Stock data downloaded for date range")
 
 }
 
