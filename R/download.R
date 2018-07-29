@@ -1,3 +1,13 @@
+#' Title
+#'
+#' @param date
+#' @param exchange
+#'
+#' @return
+#' @export
+#'
+#' @examples
+
 make_date_url <- function(date, exchange = c("nse", "bse")){
   if(exchange == "nse"){
     download_name <- paste0("cm", toupper(as.character(date, "%d%b%Y")), "bhav.csv")
@@ -13,12 +23,33 @@ make_date_url <- function(date, exchange = c("nse", "bse")){
   }
 }
 
+
+#' Title
+#'
+#' @param date
+#' @param exchange
+#'
+#' @return
+#' @export
+#'
+#' @examples
+
 download_stocks_both <- function(date = lubridate::today(), ...){
 
   download_stocks(date = date, exchange = "nse", ...)
   download_stocks(date = date, exchange = "bse", ...)
 }
 
+
+#' Title
+#'
+#' @param date
+#' @param exchange
+#'
+#' @return
+#' @export
+#'
+#' @examples
 
 download_stocks <- function(date = lubridate::today(), exchange = c("nse", "bse"), dest_path = "./data"){
 
@@ -68,6 +99,17 @@ download_stocks <- function(date = lubridate::today(), exchange = c("nse", "bse"
   message(paste0("Dowloaded stocks data from ", toupper(exchange), " on ", toupper(as.character(date, "%d %b %Y"))))
 }
 
+
+#' Title
+#'
+#' @param date
+#' @param exchange
+#'
+#' @return
+#' @export
+#'
+#' @examples
+
 download_stocks_period <- function(start = lubridate::today() - 8,
                                    end = lubridate::today(),
                                    exchange = c("both", "nse", "bse"),
@@ -113,7 +155,15 @@ download_stocks_period <- function(start = lubridate::today() - 8,
 }
 
 
-
+#' Title
+#'
+#' @param date
+#' @param exchange
+#'
+#' @return
+#' @export
+#'
+#' @examples
 
 compile_exchange_data <- function(data_path = "./data",
                                 exchange = c("both", "nse", "bse"),
@@ -188,6 +238,16 @@ compile_exchange_data <- function(data_path = "./data",
 
 }
 
+
+#' Title
+#'
+#' @param date
+#' @param exchange
+#'
+#' @return
+#' @export
+#'
+#' @examples
 
 update_stocks <- function(data_path = "./data",
                           till = lubridate::today(),

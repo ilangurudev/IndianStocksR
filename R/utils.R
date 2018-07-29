@@ -1,3 +1,13 @@
+#' Title
+#'
+#' @param date
+#' @param exchange
+#'
+#' @return
+#' @export
+#'
+#' @examples
+
 check_exchange <- function(exchange = c("nse", "bse"), include_both = TRUE){
 
   if(include_both){
@@ -18,6 +28,15 @@ check_exchange <- function(exchange = c("nse", "bse"), include_both = TRUE){
 
 }
 
+#' Title
+#'
+#' @param date
+#' @param exchange
+#'
+#' @return
+#' @export
+#'
+#' @examples
 
 date_validation <- function(date){
   date <- lubridate::as_date(date) #%>% suppressWarnings() %>% suppressMessages()
@@ -30,6 +49,15 @@ date_validation <- function(date){
   date
 }
 
+#' Title
+#'
+#' @param date
+#' @param exchange
+#'
+#' @return
+#' @export
+#'
+#' @examples
 
 date_filename_pattern <- function(date){
   paste0(lubridate::year(date), "_",
@@ -37,6 +65,16 @@ date_filename_pattern <- function(date){
          lubridate::mday(date) %>% stringr::str_pad(width = 2, side = "left", pad = "0"))
 }
 
+
+#' Title
+#'
+#' @param date
+#' @param exchange
+#'
+#' @return
+#' @export
+#'
+#' @examples
 
 extract_date <- function(x){
   if(length(x) == 0) return(NA)
