@@ -1,0 +1,12 @@
+Package: IndianStocksR
+Type: Package
+Title: An R package for getting data from NSE and BSE
+Version: 0.1.0
+Author: Gurudev Ilangovan
+Maintainer: Gurudev Ilangovan <ilangurudev@gmail.com>
+Description: An R package to download end of day data provided by the Indian stock markets, NSE and BSE
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Imports: lubridate,
+    magrittr
