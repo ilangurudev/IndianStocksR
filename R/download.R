@@ -111,11 +111,11 @@ download_stocks <- function(date = lubridate::today(),
     },
     error = function(e){
       file.remove(dest_file)
-      stop(download_error_message(date))
+      stop(download_error_message(date, exchange))
     },
     warning = function(w){
       file.remove(dest_file)
-      stop(download_error_message(date))
+      stop(download_error_message(date, exchange))
     }
   )
 
@@ -318,6 +318,8 @@ compile_exchange_data <- function(data_path = "./data",
 #' Defaults to TRUE.
 #' @param delete_component_files Works only if compile is TRUE. If TRUE, only the compiled file will be retained.
 #' If FALSE, all the individual component files will be retained.
+#' @param quiet Controls the download status message.
+#' If you do not want the download status on each day, TRUE should be specified. Defaults to FALSE.
 #'
 #' @return If exchange is "both", then the compiled data from both "nse" and "bse" is returned or
 #' the compiled data from whatever exchange is specified. The new files are also written as csvs in the path specified.
@@ -331,7 +333,8 @@ update_stocks <- function(data_path = "./data",
                           till = lubridate::today(),
                           exchange = c("both", "nse", "bse"),
                           compile = TRUE,
-                          delete_component_files = TRUE){
+                          delete_component_files = TRUE,
+                          quiet = FALSE){
 
   exchange <- check_exchange(exchange)
   stopifnot(dir.exists(data_path))
@@ -341,13 +344,15 @@ update_stocks <- function(data_path = "./data",
                   till = till,
                   exchange = "nse",
                   compile = compile,
-                  delete_component_files = delete_component_files)
+                  delete_component_files = delete_component_files,
+                  quiet = quiet)
 
     update_stocks(data_path = data_path,
                   till = till,
                   exchange = "bse",
                   compile = compile,
-                  delete_component_files = delete_component_files)
+                  delete_component_files = delete_component_files,
+                  quiet = quiet)
 
     compile_exchange_data(exchange = "both", data_path = data_path, delete_component_files = FALSE)
 
@@ -368,7 +373,8 @@ update_stocks <- function(data_path = "./data",
                            exchange = exchange,
                            dest_path = data_path,
                            compile = compile,
-                           delete_component_files = delete_component_files)
+                           delete_component_files = delete_component_files,
+                           quiet = quiet)
 
   }
 

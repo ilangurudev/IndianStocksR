@@ -1,0 +1,84 @@
+---
+title: "A walkthrogh of the functions in IndianStocksR"
+author: "Gurudev Ilangovan"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+The `IndianStocksR` package is used to download the end of day  data of all stocks in the two primary Indian stock markets, [NSE](http://nseindia.com/) and [BSE](https://www.bseindia.com/). The end of data data is provided free by the two stock exchanges from their websites and consists of information like the open, high, low, close among others for each script that's traded in them. 
+
+The data can be accessed from their websites based on the date formatted in a certain way. The R-Bloggers [article](https://www.r-bloggers.com/extracting-eod-data-from-nse/) was the source of inspiration for the package. However, the package organizes the code there and creates a much more accessible api that's more powerful in a sense.
+
+It is adviced to create a folder and set the working directory to that folder before we start work. Even better, if you're working from Rstudio is to create an R project for downloading the data and working on your analysis.
+
+After installation, we load the packages necessary.
+```{r}
+library(IndianStocksR)
+```
+
+## Main Functions
+
+The main workhorse function in the package `download_stocks`. However, you will rarely have to use it. It still pays to udnerstand the paramters as it is the basis of the other functions that you will probably use. 
+```{r}
+download_stocks(date = "2018-07-20", exchange = c("nse", "bse"), dest_path = "./data", quiet = FALSE)
+```
+
+- The `date` parameter can be a date object (and defaults to today). It can also be a string (yyyy-mm-dd) or a number that can be parsed as a date by `lubridate::as_date()`. For instance, `"2018-05-21"` is a valid date. 
+- The `exchange` can either be "nse" or "bse".
+- The `dest_path` specifies where you want the data files to get downloaded. It defaults to the data folder in the current working directory (which it will create if not found). This is why it is advisable to work in a project. This keeps all the data files of a project organized. If the path you specify is not found, an error is thrown. 
+- The `quiet` parameter controls whether you want the download status messages or not.
+
+The main purpose of this function is to download data from the exchange specified on the date specified. If data is not available for the date you specified, you will get an error. 
+
+The function you'll probably have to use first is the `download_stocks_period`  
+
+```{r}
+df_period <- 
+  download_stocks_period(start = "2018-07-21",
+                         end = "2018-07-26",
+                         exchange = c("both", "nse", "bse"),
+                         dest_path = "./data",
+                         compile = TRUE,
+                         delete_component_files = TRUE,
+                         quiet = FALSE)
+```
+
+- `start` and `end`: The download stocks period downloads data for all the dates in the date range specfied by `start` and `end`. `start` defaults to today - 8 days and `end` defaults to today. However, it makes sense to make start today - 365 or specify the actual date from when you want the data. You could change the `end` value too if you want data for a specific date range. The `start` and `end` values follow the same rules as the `date` parameter in `download_stocks`
+- The `exchange`function's behavior is pretty straightforward. Downloades data for the date range from NSE if "nse" or BSE from "bse" or both NSE and BSE if "both". Defaults to "both"
+- The `dest_path` does the same job as it does in `download_stocks`
+- The `compile` parameter compiles all the downloaded files into one file (if exchange is "both", one compiled file for "nse", one for "bse" and one combined). This option is by default on as compiled files are much more tractable for analysis. 
+- The `delete_component_files` deletes everything apart from the compiled files. This keeps the workspace clean and more efficient for updation.
+- The `quiet` does the same job as it does in `download_stocks`
+
+The function returns the compiled files apart from writing them out as a csv. 
+
+
+Once you have the `download_stocks_period` run, you can update the database later by running the `update_stocks`
+```{r}
+df_updated <- 
+  update_stocks(data_path = "./data",
+                till = lubridate::today(),
+                exchange = c("both", "nse", "bse"),
+                compile = TRUE,
+                delete_component_files = TRUE)
+```
+
+
+Most of this parameters have been discussed before. This function scans all the files in the directory and finds out the date till which there is data and downloads data from the day after till the date mentioned by `till`. If there are no files inside the specified folder, it downloads data from today - 8 till the date mentioned by `till`. You rarely have to tweak the `till` function we use the function primarily to update till the current day. 
+
+
+## A note on defaults
+
+Except the date parameters, one rarely has to tweak the defaults. The defaults are designed to work optimally. 
+

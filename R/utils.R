@@ -5,21 +5,21 @@
 #' @param date  The date you want the data for.
 #' The input should either be a date object or a something that lubridate::as_date can parse to be a
 #' date. If a string is in the format yyyy-mm-dd, this generally works.
-#' @param market Usually "nse" or "bse". But any string can be specified.
+#' @param exchange Usually "nse" or "bse". But any string can be specified.
 #'
 #' @return The download error message
 #'
 #' @examples
 #' download_error_message(lubridate::today(), "nse")
-download_error_message <- function(date, market){
+download_error_message <- function(date, exchange){
   date <- lubridate::as_date(date)
 
   if(lubridate::wday(date) %in% c(1,7)){
-    paste0("No download data available for ", toupper(market), " on ",
+    paste0("No download data available for ", toupper(exchange), " on ",
            date %>% as.character("%d %b %Y"),
            ifelse(lubridate::wday(date) == 7, " (Saturday)", " (Sunday)"))
   } else {
-    paste0("No download data available for ", toupper(market), " on ",
+    paste0("No download data available for ", toupper(exchange), " on ",
            date %>% as.character("%d %b %Y"),
            ". Either the data is not available yet or the exchange did not function on that day.")
   }
