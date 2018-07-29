@@ -1,24 +1,3 @@
-check_exchange <- function(exchange = c("nse", "bse"), include_both = TRUE){
-
-    if(include_both){
-      exchanges <- c("both", "nse", "bse")
-    } else{
-      exchanges <- c("nse", "bse")
-    }
-
-    if(all(exchange %in% exchanges)){
-      if(length(exchange) > 1){
-        exchange <- ifelse(include_both, "both", "nse")
-        message("Downloading from '", exchange, "' as exchange not clearly specified.")
-      }
-      return(exchange[1])
-    } else {
-      stop("At least one of the specified options for exchange are not valid.")
-    }
-
-}
-
-
 make_date_url <- function(date, exchange = c("nse", "bse")){
   if(exchange == "nse"){
     download_name <- paste0("cm", toupper(as.character(date, "%d%b%Y")), "bhav.csv")
@@ -40,22 +19,6 @@ download_stocks_both <- function(date = lubridate::today(), ...){
   download_stocks(date = date, exchange = "bse", ...)
 }
 
-date_validation <- function(date){
-  date <- lubridate::as_date(date) #%>% suppressWarnings() %>% suppressMessages()
-
-  if((!lubridate::is.Date(date)) | is.na(date)){
-    e <- simpleError("Date failed to parse")
-    stop(e)
-  }
-
-  date
-}
-
-date_filename_pattern <- function(date){
-  paste0(lubridate::year(date), "_",
-  lubridate::month(date) %>% stringr::str_pad(width = 2, side = "left", pad = "0"), "_",
-  lubridate::mday(date) %>% stringr::str_pad(width = 2, side = "left", pad = "0"))
-}
 
 download_stocks <- function(date = lubridate::today(), exchange = c("nse", "bse"), dest_path = "./data"){
 
@@ -150,10 +113,6 @@ download_stocks_period <- function(start = lubridate::today() - 8,
 }
 
 
-extract_date <- function(x){
-  if(length(x) == 0) return(NA)
-  stringr::str_extract(x, "[\\d]+_[\\d]+_[\\d]+") %>% lubridate::ymd()
-}
 
 
 compile_exchange_data <- function(data_path = "./data",
