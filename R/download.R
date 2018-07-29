@@ -123,6 +123,10 @@ download_stocks <- function(date = lubridate::today(),
   if(exchange == "nse") df_download$X14 <- NULL
   df_download$date <- date
   readr::write_csv(df_download, dest_file %>% stringr::str_replace("zip", "csv"))
+  if(file.exists(dest_file)){
+    unlink(dest_file)
+    file.remove(dest_file)
+  }
   file.remove(dest_file)
   if(!quiet){
     message(paste0("Dowloaded stocks data from ", toupper(exchange), " on ", toupper(as.character(date, "%d %b %Y"))))
