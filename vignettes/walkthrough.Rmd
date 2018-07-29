@@ -52,6 +52,7 @@ df_period <-
                          compile = TRUE,
                          delete_component_files = TRUE,
                          quiet = FALSE)
+df_period
 ```
 
 - `start` and `end`: The download stocks period downloads data for all the dates in the date range specfied by `start` and `end`. `start` defaults to today - 8 days and `end` defaults to today. However, it makes sense to make start today - 365 or specify the actual date from when you want the data. You could change the `end` value too if you want data for a specific date range. The `start` and `end` values follow the same rules as the `date` parameter in `download_stocks`
@@ -72,6 +73,7 @@ df_updated <-
                 exchange = c("both", "nse", "bse"),
                 compile = TRUE,
                 delete_component_files = TRUE)
+df_updated
 ```
 
 
