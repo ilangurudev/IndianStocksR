@@ -280,7 +280,7 @@ compile_exchange_data <- function(data_path = "./data",
 
   } else {
 
-    files <- dir(data_path, pattern = exchange)
+    files <- dir(data_path, pattern = exchange) %>% stringr::str_subset(".csv")
     if(length(files) < 1){
       stop(paste("No files of", exchange, "to compile."))
     }
