@@ -101,7 +101,7 @@ download_stocks <- function(date = lubridate::today(),
   dest_file <- paste0(dest_path, "/", exchange, "_", date_filename_pattern(date), ".zip")
   url <- make_date_url(date = date, exchange = exchange)
 
-  if(identical(httr::status_code(GET(url)), 200L)){
+  if(identical(httr::status_code(httr::GET(url)), 200L)){
 
     httr::GET(url,
               httr::user_agent("Mozilla/5.0"),
