@@ -1,6 +1,6 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^\.travis\.yml$
-^\README\.md$
-^\README\.Rmd$
 ^data$
+^README\.md$
+^README\.Rmd$
