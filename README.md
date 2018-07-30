@@ -3975,22 +3975,6 @@ NA
 Except the date parameters, one rarely has to tweak the defaults. The
 defaults are designed to work optimally.
 
-# Let’s look at the data
-
-Let’s see how well *Larsen and Toubro* has performed in NSE in the last
-few days.
-
-``` r
-df_updated %>% 
-  filter(symbol == "LT",
-         exchange == "nse") %>% 
-  ggplot(aes(date, close)) +
-  geom_line() +
-  theme_light()
-```
-
-<img src="README_files/figure-gfm/unnamed-chunk-7-1.png" width="100%" />
-
 # Bugs, comments, suggestions and feature requests
 
 This is just an initial version of the package and I expect to see a few
