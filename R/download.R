@@ -10,9 +10,9 @@
 #' @return The url that should have the data for the exchange and the date specified.
 #'
 #' @examples
-#' make_date_url("2018-07-25", exchange = "bse")
+#' IndianStocksR:::make_date_url("2018-07-25", exchange = "bse")
 #'
-#' make_date_url(lubridate::today())
+#' IndianStocksR:::make_date_url(lubridate::today())
 
 make_date_url <- function(date, exchange = c("nse", "bse")){
 
@@ -205,12 +205,18 @@ download_stocks_period <- function(start = lubridate::today() - 8,
 #' Both the nse and bse compiled files are parsed and combined into both_compiled_latest_date.
 #' Dedaults to "both".
 #' @param delete_component_files Deletes all the individual files and retains only the compiled files.
+#' @param quiet Controls the download status message.
+#' If you do not want the download status on each day, TRUE should be specified. Defaults to FALSE.
+
 #'
 #' @return Returns the compiled dataframe and also has the returned dataframe written out as a csv in the folder it compiles.
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' compile_exchange_data(data_path = "./data", exchange = "both")
+#' }
+#'
 #'
 
 compile_exchange_data <- function(data_path = "./data",
@@ -323,7 +329,7 @@ compile_exchange_data <- function(data_path = "./data",
 #' @examples
 #' update_stocks()
 #'
-#' update_stocks(till = "2018-07-25")
+#' update_stocks(till = lubridate::today())
 update_stocks <- function(data_path = "./data",
                           till = lubridate::today(),
                           exchange = c("both", "nse", "bse"),
@@ -376,6 +382,5 @@ update_stocks <- function(data_path = "./data",
   }
 
 }
-
 
 

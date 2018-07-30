@@ -20,5 +20,5 @@ The download error message
 An error message constructor.
 }
 \examples{
-download_error_message(lubridate::today(), "nse")
+IndianStocksR:::download_error_message(lubridate::today(), "nse")
 }

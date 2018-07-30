@@ -39,5 +39,5 @@ Downloads data from the point till when the data is present (if nothing is prese
 \examples{
 update_stocks()
 
-update_stocks(till = "2018-07-25")
+update_stocks(till = lubridate::today())
 }

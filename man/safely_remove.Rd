@@ -16,5 +16,5 @@ Deletes the file and returns nothing
 Remove a file safely
 }
 \examples{
-safely_remove("./data/file.csv")
+IndianStocksR:::safely_remove("./data/file.csv")
 }

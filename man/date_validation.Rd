@@ -19,6 +19,6 @@ A date validator
 
 # date_validation("j765")
 
-date_validation("2018-07-24")
-date_validation(lubridate::today())
+IndianStocksR:::date_validation("2018-07-24")
+IndianStocksR:::date_validation(lubridate::today())
 }

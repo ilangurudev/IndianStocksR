@@ -20,7 +20,7 @@ The url that should have the data for the exchange and the date specified.
 Generate url to download
 }
 \examples{
-make_date_url("2018-07-25", exchange = "bse")
+IndianStocksR:::make_date_url("2018-07-25", exchange = "bse")
 
-make_date_url(lubridate::today())
+IndianStocksR:::make_date_url(lubridate::today())
 }

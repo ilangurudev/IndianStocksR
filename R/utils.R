@@ -10,7 +10,7 @@
 #' @return The download error message
 #'
 #' @examples
-#' download_error_message(lubridate::today(), "nse")
+#' IndianStocksR:::download_error_message(lubridate::today(), "nse")
 download_error_message <- function(date, exchange){
   date <- lubridate::as_date(date)
 
@@ -37,7 +37,7 @@ download_error_message <- function(date, exchange){
 #' @return The validated exchange value or en error if its not valid.
 #'
 #' @examples
-#' check_exchange()
+#' IndianStocksR::: check_exchange()
 
 check_exchange <- function(exchange = c("nse", "bse"), include_both = TRUE){
 
@@ -72,8 +72,8 @@ check_exchange <- function(exchange = c("nse", "bse"), include_both = TRUE){
 #'
 #' # date_validation("j765")
 #'
-#' date_validation("2018-07-24")
-#' date_validation(lubridate::today())
+#' IndianStocksR:::date_validation("2018-07-24")
+#' IndianStocksR:::date_validation(lubridate::today())
 date_validation <- function(date){
   date <- lubridate::as_date(date) #%>% suppressWarnings() %>% suppressMessages()
 
@@ -95,7 +95,7 @@ date_validation <- function(date){
 #' @return A string that contains the date part of a filename
 #'
 #' @examples
-#' date_filename_pattern(lubridate::today())
+#' IndianStocksR:::date_filename_pattern(lubridate::today())
 date_filename_pattern <- function(date){
   paste0(lubridate::year(date), "_",
          lubridate::month(date) %>% stringr::str_pad(width = 2, side = "left", pad = "0"), "_",
@@ -111,7 +111,7 @@ date_filename_pattern <- function(date){
 #'
 #' @examples
 #'
-#' extract_date(dir("./data"))
+#' IndianStocksR:::extract_date(dir("./data"))
 extract_date <- function(x){
   if(length(x) == 0) return(NA)
   stringr::str_extract(x, "[\\d]+_[\\d]+_[\\d]+") %>% lubridate::ymd()
@@ -127,7 +127,7 @@ extract_date <- function(x){
 #' @return Deletes the file and returns nothing
 #'
 #' @examples
-#' safely_remove("./data/file.csv")
+#' IndianStocksR:::safely_remove("./data/file.csv")
 safely_remove <- function(file){
   if(file.exists(file)){
     if(stringr::str_detect(file, ".zip")){

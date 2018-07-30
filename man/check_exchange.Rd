@@ -18,5 +18,5 @@ The validated exchange value or en error if its not valid.
 A function to validate the specified exchange value and get the exchange value if nothing is specified.
 }
 \examples{
-check_exchange()
+IndianStocksR::: check_exchange()
 }

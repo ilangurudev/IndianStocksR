@@ -16,5 +16,5 @@ A string that contains the date part of a filename
 A function to help construct the date part of a filename from the name.
 }
 \examples{
-date_filename_pattern(lubridate::today())
+IndianStocksR:::date_filename_pattern(lubridate::today())
 }

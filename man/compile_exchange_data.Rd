@@ -17,6 +17,9 @@ Both the nse and bse compiled files are parsed and combined into both_compiled_l
 Dedaults to "both".}
 
 \item{delete_component_files}{Deletes all the individual files and retains only the compiled files.}
+
+\item{quiet}{Controls the download status message.
+If you do not want the download status on each day, TRUE should be specified. Defaults to FALSE.}
 }
 \value{
 Returns the compiled dataframe and also has the returned dataframe written out as a csv in the folder it compiles.
@@ -25,6 +28,9 @@ Returns the compiled dataframe and also has the returned dataframe written out a
 This is used to compile all the individual files for different dates into compiled files.
 }
 \examples{
+\dontrun{
 compile_exchange_data(data_path = "./data", exchange = "both")
+}
+
 
 }

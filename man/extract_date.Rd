@@ -17,5 +17,5 @@ Helper functions
 }
 \examples{
 
-extract_date(dir("./data"))
+IndianStocksR:::extract_date(dir("./data"))
 }
