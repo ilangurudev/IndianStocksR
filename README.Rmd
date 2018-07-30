@@ -7,7 +7,7 @@ output:
     toc: true
 ---
 
-```{r setup, results='hide',message=FALSE, cache=TRUE, include=FALSE, echo=FALSE}
+```{r setup, results='hide',message=FALSE,  include=FALSE, echo=FALSE}
 pacman::p_load(knitr,
                kableExtra)
 
@@ -43,7 +43,7 @@ devtools::install_github("ilangurudev/IndianStocksR")
 ```
 
 After installation, we load the package. The package basically creates data frames and hence plays along well with the concepts of tidy data and the `tidyverse`. So it is highly encouraged to load that package as well
-```{r cache=TRUE, message=FALSE}
+```{r  message=FALSE}
 library(IndianStocksR)
 library(tidyverse)
 ```
@@ -55,7 +55,7 @@ library(tidyverse)
 ## `download_stocks`
 
 The workhorse of the package is the function `download_stocks`. However, you will rarely have to use it. It still pays to understand the parameters as it is the basis of the other functions that you will probably use. 
-```{r cache=TRUE}
+```{r }
 download_stocks(date = "2018-07-20", exchange = c("nse", "bse"), dest_path = "./data", quiet = FALSE)
 ```
 
@@ -72,7 +72,7 @@ The main purpose of this function is to download data from the specified exchang
 
 The function you'll probably have to use first is the `download_stocks_period`  
 
-```{r cache=TRUE, message=FALSE}
+```{r  message=FALSE}
 df_period <- 
   download_stocks_period(start = "2018-07-21",
                          end = "2018-07-26",
@@ -94,7 +94,7 @@ Let's take a look at `df_period`.
 ```
 df_period %>% slice(1:200)
 ```
-```{r cache=TRUE, echo=FALSE}
+```{r  echo=FALSE}
 df_period %>% slice(1:15) %>% make_table()
 ```
 
@@ -105,7 +105,7 @@ The function returns the compiled files apart from writing them out as a csv.
 ## `update_stocks`
 
 Once you have the `download_stocks_period` run, you can update the database later by running the `update_stocks`
-```{r cache=TRUE, message=FALSE}
+```{r  message=FALSE}
 df_updated <- 
   update_stocks(data_path = "./data",
                 till = lubridate::today(),
@@ -121,7 +121,7 @@ Let's take a look at `df_updated`.
 ```
 df_updated %>% slice(1:200)
 ```
-```{r cache=TRUE, echo=FALSE}
+```{r  echo=FALSE}
 df_updated %>% slice(1:15) %>% make_table()
 ```
 
