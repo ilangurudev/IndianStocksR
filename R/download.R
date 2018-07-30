@@ -101,37 +101,27 @@ download_stocks <- function(date = lubridate::today(),
   dest_file <- paste0(dest_path, "/", exchange, "_", date_filename_pattern(date), ".zip")
   url <- make_date_url(date = date, exchange = exchange)
 
-  tryCatch(
-    {
-      httr::GET(url,
-                httr::user_agent("Mozilla/5.0"),
-                httr::write_disk(dest_file))
-    },
-    error = function(e){
-      safely_remove(dest_file)
-      stop(download_error_message(date, exchange))
-    },
-    warning = function(w){
-      safely_remove(dest_file)
-      stop(download_error_message(date, exchange))
-    },
-    finally = {
-      safely_remove(dest_file)
-    }
-  )
+  if(identical(httr::status_code(GET(url)), 200L)){
 
-  df_download <- suppressWarnings(suppressMessages(readr::read_csv(dest_file)))
-  if(exchange == "nse") df_download$X14 <- NULL
-  df_download$date <- date
-  readr::write_csv(df_download, dest_file %>% stringr::str_replace("zip", "csv"))
-  # if(file.exists(dest_file)){
-  #   unlink(dest_file)
-  #   file.remove(dest_file)
-  # }
-  safely_remove(dest_file)
+    httr::GET(url,
+              httr::user_agent("Mozilla/5.0"),
+              httr::write_disk(dest_file))
+
+    df_download <- suppressWarnings(suppressMessages(readr::read_csv(dest_file)))
+    if(exchange == "nse") df_download$X14 <- NULL
+    df_download$date <- date
+    df_download$exchange <- exchange
+    readr::write_csv(df_download, dest_file %>% stringr::str_replace("zip", "csv"))
+    safely_remove(dest_file)
+
+    status_message <- paste0("Dowloaded stocks data from ", toupper(exchange), " on ", toupper(as.character(date, "%d %b %Y")))
+
+  } else {
+    status_message <- download_error_message(date, exchange)
+  }
 
   if(!quiet){
-    message(paste0("Dowloaded stocks data from ", toupper(exchange), " on ", toupper(as.character(date, "%d %b %Y"))))
+    message(status_message)
   }
 
 }
@@ -181,27 +171,23 @@ download_stocks_period <- function(start = lubridate::today() - 8,
 
 
   if(exchange == "both"){
-    purrr::walk(start:end, function(x){
-      tryCatch(download_stocks_both(date = x, dest_path, quiet = quiet),
-               error = function(e){
-                 message(download_error_message(x, "at least one of the exchanges"))
-                 NULL
-               })
-    })
+    purrr::walk(start:end, ~download_stocks_both(date = .x,
+                                                 dest_path = dest_path,
+                                                 quiet = quiet))
   } else {
-    purrr::walk(start:end, function(x){
-      tryCatch(download_stocks(date = x, exchange = exchange, dest_path, quiet = quiet),
-               error = function(e){
-                 message(download_error_message(x, exchange))
-                 NULL
-               })
-    })
+    purrr::walk(start:end, ~download_stocks(date = .x,
+                                            exchange = exchange,
+                                            dest_path = dest_path,
+                                            quiet = quiet))
   }
 
   message("Stock data downloaded for date range")
-  # browser()
+
   if(compile){
-    compile_exchange_data(data_path = dest_path, exchange = exchange, delete_component_files)
+    compile_exchange_data(data_path = dest_path,
+                          exchange = exchange,
+                          delete_component_files = delete_component_files,
+                          quiet = quiet)
   }
 
 }
@@ -229,7 +215,8 @@ download_stocks_period <- function(start = lubridate::today() - 8,
 
 compile_exchange_data <- function(data_path = "./data",
                                 exchange = c("both", "nse", "bse"),
-                                delete_component_files =  TRUE){
+                                delete_component_files =  TRUE,
+                                quiet = FALSE){
 
   exchange <- check_exchange(exchange)
   stopifnot(dir.exists(data_path))
@@ -237,10 +224,8 @@ compile_exchange_data <- function(data_path = "./data",
   if(exchange == "both"){
 
     df_bse <- compile_exchange_data(data_path = data_path, exchange = "bse")
-    df_bse$exchange <- "bse"
 
     df_nse <- compile_exchange_data(data_path = data_path, exchange = "nse")
-    df_nse$exchange <- "nse"
 
     df_bse <-
       df_bse %>%
@@ -267,7 +252,7 @@ compile_exchange_data <- function(data_path = "./data",
       dplyr::select(exchange, date, symbol, isin, open, high, low, close, volume, dplyr::everything()) %>%
       dplyr::mutate(isin = isin %>% as.character())
 
-    message(paste("Compiling", toupper("BSE and NSE together")))
+    if(!quiet) message(paste("\nCompiling", toupper("BSE and NSE together")))
 
     df_all <-
       dplyr::bind_rows(df_nse, df_bse)
@@ -278,7 +263,7 @@ compile_exchange_data <- function(data_path = "./data",
 
   } else {
 
-    message(paste("Compiling", toupper(exchange)))
+    if(!quiet) message(paste("\nCompiling", toupper(exchange)))
 
     files <- dir(data_path, pattern = exchange) %>% stringr::str_subset(".csv")
     if(length(files) < 1){
@@ -286,9 +271,9 @@ compile_exchange_data <- function(data_path = "./data",
     }
     files <- paste0(data_path, "/", files)
 
-    message(paste("Compiling all and only the available files in the specified directory.",
+    if(!quiet) message(paste("Compiling all and only the available files in the specified directory.",
                   "If the available files contain gaps, then the compiled file will too.",
-                  "If it contains other exchange files, they will get added to the compiled too."))
+                  "If it contains other exchange files, they will get added to the compiled too.\n"))
 
     df_exchange_compiled <- purrr::map_dfr(files, function(x){
 
@@ -301,7 +286,6 @@ compile_exchange_data <- function(data_path = "./data",
 
     if(delete_component_files){
       files %>% purrr::walk(safely_remove)
-      # file.remove(files)
     }
 
     readr::write_csv(df_exchange_compiled, paste0(data_path, "/", exchange, "_compiled_", date_filename_pattern(max_date), ".csv"))
@@ -365,10 +349,12 @@ update_stocks <- function(data_path = "./data",
                   delete_component_files = delete_component_files,
                   quiet = quiet)
 
-    compile_exchange_data(exchange = "both", data_path = data_path, delete_component_files = FALSE)
+    compile_exchange_data(exchange = "both",
+                          data_path = data_path,
+                          delete_component_files = FALSE,
+                          quiet = TRUE)
 
   } else {
-    # browser()
 
     files <- dir(path = data_path,
                  pattern = exchange)
@@ -392,7 +378,4 @@ update_stocks <- function(data_path = "./data",
 }
 
 
-# `%>%` <- function(...){
-#   purrr::`%>%`(...)
-# }
 
