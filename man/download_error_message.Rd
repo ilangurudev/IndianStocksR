@@ -4,14 +4,14 @@
 \alias{download_error_message}
 \title{Helper functions}
 \usage{
-download_error_message(date, market)
+download_error_message(date, exchange)
 }
 \arguments{
 \item{date}{The date you want the data for.
 The input should either be a date object or a something that lubridate::as_date can parse to be a
 date. If a string is in the format yyyy-mm-dd, this generally works.}
 
-\item{market}{Usually "nse" or "bse". But any string can be specified.}
+\item{exchange}{Usually "nse" or "bse". But any string can be specified.}
 }
 \value{
 The download error message

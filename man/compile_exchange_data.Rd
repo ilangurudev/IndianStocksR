@@ -5,7 +5,7 @@
 \title{Compile the exchange files inside a directory}
 \usage{
 compile_exchange_data(data_path = "./data", exchange = c("both", "nse",
-  "bse"), delete_component_files = TRUE)
+  "bse"), delete_component_files = TRUE, quiet = FALSE)
 }
 \arguments{
 \item{data_path}{The path that contains the data files you want to compile. Deafults to the data folder in the current working directory.}

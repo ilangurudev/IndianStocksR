@@ -6,7 +6,7 @@
 \usage{
 update_stocks(data_path = "./data", till = lubridate::today(),
   exchange = c("both", "nse", "bse"), compile = TRUE,
-  delete_component_files = TRUE)
+  delete_component_files = TRUE, quiet = FALSE)
 }
 \arguments{
 \item{data_path}{The path you want to update, which possibly contains the data files.
@@ -24,6 +24,9 @@ Defaults to TRUE.}
 
 \item{delete_component_files}{Works only if compile is TRUE. If TRUE, only the compiled file will be retained.
 If FALSE, all the individual component files will be retained.}
+
+\item{quiet}{Controls the download status message.
+If you do not want the download status on each day, TRUE should be specified. Defaults to FALSE.}
 }
 \value{
 If exchange is "both", then the compiled data from both "nse" and "bse" is returned or
