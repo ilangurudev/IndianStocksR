@@ -13,7 +13,8 @@ Imports: lubridate,
     purrr,
     dplyr,
     stringr,
-    readr
+    readr,
+    httr
 RoxygenNote: 6.0.1
 Suggests: knitr,
     rmarkdown
