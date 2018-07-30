@@ -1,0 +1,139 @@
+---
+title: README
+author: Gurudev Ilangovan
+date: '2018-07-29'
+output:
+  github_document:
+    toc: true
+---
+
+```{r setup, results='hide',message=FALSE, cache=TRUE, include=FALSE, echo=FALSE}
+pacman::p_load(knitr,
+               kableExtra)
+
+
+
+make_table <- function(tbl) {
+  # DT::datatable(tbl)
+  knitr::kable(tbl, "html") %>%
+        kable_styling(bootstrap_options =
+                        c("striped", "hover", "responsive"),
+                      full_width = FALSE,
+                      position = "left") %>% 
+    scroll_box(width = "1000px", height = "500px")
+    
+}
+```
+
+[![Travis-CI Build Status](https://travis-ci.org/ilangurudev/IndianStocksR.svg?branch=master)](https://travis-ci.org/ilangurudev/IndianStocksR)
+
+# Introduction
+
+The `IndianStocksR` package is used to download the end of day  data of all stocks in the two primary Indian stock markets, [NSE](http://nseindia.com/) and [BSE](https://www.bseindia.com/). The end of data data is provided free by the two stock exchanges from their websites and consists of information like the open, high, low, close among others for each script that's traded in them. 
+
+The data can be accessed from their websites based on the date formatted in a certain way. The R-Bloggers [article](https://www.r-bloggers.com/extracting-eod-data-from-nse/) was the source of inspiration for the package. However, the package modularizes the code, tweaks a lot of things and creates a much more accessible API that's more powerful in the sense that it abstracts away the complexity from the user. 
+
+It is advised to create a folder and set the working directory to that folder before we start work. Even better, if you're working from R studio is to create an R project for downloading the data and working on your analysis.
+
+The package is currently getting submitted to CRAN after which a simple `install.packages("IndianStocksR")` will get it installed. But for now, it is available on github. 
+
+```
+install.packages("devtools")
+devtools::install_github("ilangurudev/IndianStocksR")
+```
+
+After installation, we load the package. The package basically creates data frames and hence plays along well with the concepts of tidy data and the `tidyverse`. So it is highly encouraged to load that package as well
+```{r cache=TRUE, message=FALSE}
+library(IndianStocksR)
+library(tidyverse)
+```
+
+<br>
+
+# Main Functions
+
+## `download_stocks`
+
+The workhorse of the package is the function `download_stocks`. However, you will rarely have to use it. It still pays to understand the parameters as it is the basis of the other functions that you will probably use. 
+```{r cache=TRUE}
+download_stocks(date = "2018-07-20", exchange = c("nse", "bse"), dest_path = "./data", quiet = FALSE)
+```
+
+- The `date` parameter can be a date object (and defaults to today). It can also be a string (yyyy-mm-dd) or a number that can be parsed as a date by `lubridate::as_date()`. For instance, `"2018-05-21"` is a valid date. 
+- The `exchange` can either be "nse" or "bse".
+- The `dest_path` specifies where you want the data files to get downloaded. It defaults to the data folder in the current working directory (which it will create if not found). This is why it is advisable to work in a project. This keeps all the data files of a project organized. If the path you specify is not found, an error is thrown. 
+- The `quiet` parameter controls whether you want the download status messages or not.
+
+The main purpose of this function is to download data from the specified exchange on the mentioned date. If data is not available for the date you specified, you will get an error. 
+
+<br>
+
+## `download_stocks_period`
+
+The function you'll probably have to use first is the `download_stocks_period`  
+
+```{r cache=TRUE, message=FALSE}
+df_period <- 
+  download_stocks_period(start = "2018-07-21",
+                         end = "2018-07-26",
+                         exchange = c("both", "nse", "bse"),
+                         dest_path = "./data",
+                         compile = TRUE,
+                         delete_component_files = TRUE,
+                         quiet = FALSE)
+```
+
+- `start` and `end`: The download stocks period downloads data for all the dates in the date range specified by `start` and `end`. `start` defaults to today - 8 days and `end` defaults to today. If today is `r lubridate::today()`, then end takes that value and start takes the value `r lubridate::today()-8`. However, it makes sense to make start today - 365 or specify the actual date from when you want the data. You could change the `end` value too if you want data for a specific date range. The `start` and `end` values follow the same rules as the `date` parameter in `download_stocks`
+- The `exchange`function's behavior is pretty straightforward. Downloads data for the date range from NSE if "nse" or BSE from "bse" or both NSE and BSE if "both". Defaults to "both"
+- The `dest_path` does the same job as it does in `download_stocks`
+- The `compile` parameter compiles all the downloaded files into one file (if exchange is "both", one compiled file for "nse", one for "bse" and one combined). This option is by default on as compiled files are much more tractable for analysis. 
+- The `delete_component_files` deletes everything apart from the compiled files. This keeps the work space clean and more efficient for updating.
+- The `quiet` does the same job as it does in `download_stocks`
+
+Let's take a look at `df_period`.
+```
+df_period %>% slice(1:200)
+```
+```{r cache=TRUE, echo=FALSE}
+df_period %>% slice(1:15) %>% make_table()
+```
+
+The function returns the compiled files apart from writing them out as a csv. 
+
+<br>
+
+## `update_stocks`
+
+Once you have the `download_stocks_period` run, you can update the database later by running the `update_stocks`
+```{r cache=TRUE, message=FALSE}
+df_updated <- 
+  update_stocks(data_path = "./data",
+                till = lubridate::today(),
+                exchange = c("both", "nse", "bse"),
+                compile = TRUE,
+                delete_component_files = TRUE)
+```
+
+
+Most of this parameters have been discussed before. This function scans all the files in the directory and finds out the date till which there is data and downloads data from the day after till the date mentioned by `till`. If there are no files inside the specified folder, it downloads data from today - 8 till the date mentioned by `till`. You rarely have to tweak the `till` function. It's primarily used to update till the current day. 
+
+Let's take a look at `df_updated`.
+```
+df_updated %>% slice(1:200)
+```
+```{r cache=TRUE, echo=FALSE}
+df_updated %>% slice(1:15) %>% make_table()
+```
+
+<br>
+
+## A note on defaults
+
+Except the date parameters, one rarely has to tweak the defaults. The defaults are designed to work optimally. 
+
+# Bugs, comments, suggestions and feature requests
+
+This is just an initial version of the package and I expect to see a few bugs. I'd be very happy if you create github issues if you run into anything. Suggestions and feature requests welcome. Feel free to comment what you think of the package.
+
+Thanks for reading! Cheers!
+

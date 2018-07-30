@@ -164,7 +164,13 @@ download_stocks_period <- function(start = lubridate::today() - 8,
 
   start <- date_validation(start)
   end <- date_validation(end)
-  stopifnot(start < end)
+  # stopifnot(start < end)
+  if(start > end) {
+    stop(paste("The start date,",
+               as.character(start, "%d %b %Y"),
+               "is more recent than the end date,",
+               as.character(end, "%d %b %Y")))
+  }
 
   exchange <- check_exchange(exchange)
 
@@ -368,10 +374,14 @@ update_stocks <- function(data_path = "./data",
     max_date <- max(extract_date(files))
 
     if(is.na(max_date)){
-      max_date <- lubridate::today() - 8
+      max_date <- lubridate::today() - 7
+      message(paste("No files found in the specified directory. Using start date,",
+                    as.character(max_date, "%d %b %Y"),
+                    "and end date,",
+                    as.character(till, "%d %b %Y")))
     }
 
-    download_stocks_period(start = max_date + 1,
+    download_stocks_period(start = max_date,
                            end = till,
                            exchange = exchange,
                            dest_path = data_path,
