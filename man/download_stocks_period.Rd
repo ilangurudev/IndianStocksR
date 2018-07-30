@@ -40,7 +40,6 @@ If FALSE, the files are just downloaded and nothing is returned.
 Downloads stock data for the period specified
 }
 \examples{
-download_stocks_period()
 
-download_stocks_period(start = "2017-01-01", end = "2017-01-05", exchange = "bse", compile = FALSE)
+download_stocks_period(start = "2018-07-24", end = "2018-07-26", exchange = "bse", compile = FALSE)
 }

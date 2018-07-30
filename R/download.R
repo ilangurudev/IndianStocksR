@@ -152,9 +152,8 @@ download_stocks <- function(date = lubridate::today(),
 #' @export
 #'
 #' @examples
-#' download_stocks_period()
 #'
-#' download_stocks_period(start = "2017-01-01", end = "2017-01-05", exchange = "bse", compile = FALSE)
+#' download_stocks_period(start = "2018-07-24", end = "2018-07-26", exchange = "bse", compile = FALSE)
 download_stocks_period <- function(start = lubridate::today() - 8,
                                    end = lubridate::today(),
                                    exchange = c("both", "nse", "bse"),
@@ -327,9 +326,8 @@ compile_exchange_data <- function(data_path = "./data",
 #' @export
 #'
 #' @examples
-#' update_stocks()
+#' update_stocks(exchange="bse")
 #'
-#' update_stocks(till = lubridate::today())
 update_stocks <- function(data_path = "./data",
                           till = lubridate::today(),
                           exchange = c("both", "nse", "bse"),
@@ -338,7 +336,9 @@ update_stocks <- function(data_path = "./data",
                           quiet = FALSE){
 
   exchange <- check_exchange(exchange)
-  stopifnot(dir.exists(data_path))
+  if(!dir.exists(data_path)){
+    dir.create(data_path)
+  }
 
   if(exchange == "both"){
     update_stocks(data_path = data_path,

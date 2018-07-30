@@ -37,7 +37,6 @@ Used to periodically update the compiled data.
 Downloads data from the point till when the data is present (if nothing is present, the last 8 days) till the point we specify.
 }
 \examples{
-update_stocks()
+update_stocks(exchange="bse")
 
-update_stocks(till = lubridate::today())
 }

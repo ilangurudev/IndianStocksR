@@ -1,10 +1,10 @@
 Package: IndianStocksR
 Type: Package
-Title: An R package for getting data from NSE and BSE
+Title: End of Day Data Downloader and Updater for Indian Stock Markets
 Version: 0.1.0
 Author: Gurudev Ilangovan
 Maintainer: Gurudev Ilangovan <ilangurudev@gmail.com>
-Description: An R package to download end of day data provided by the Indian stock markets, NSE and BSE.
+Description: A tool to download the free, end of day data provided by Indian stock markets and process it. 
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
